@@ -1,0 +1,63 @@
+---
+# Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: microservice
+---
+# Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: microservice1
+  namespace: microservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: microservice1
+  template:
+    metadata:
+      labels:
+        app: microservice1
+    spec:
+      containers:
+      - name: microservice1
+        image: 759400882116.dkr.ecr.us-east-1.amazonaws.com/microservice1:latest
+        ports:
+        - containerPort: 8080
+---
+# Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: microservice1
+  namespace: microservice
+spec:
+  ports:
+  - port: 8080
+    targetPort: 8080
+  selector:
+    app: microservice1
+---
+# Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: microservice1-ingress
+  namespace: microservice
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+spec:
+  ingressClassName: alb
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: microservice1
+            port:
+              number: 8080
